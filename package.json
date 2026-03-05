@@ -1,0 +1,44 @@
+{
+    "name": "cms-service",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build-extensions": "node scripts/build-extensions.js",
+        "clean-extensions": "node scripts/clean-extensions.js",
+        "rebuild-extensions": "npm run clean-extensions && npm run build-extensions",
+        "dev": "directus start",
+        "bootstrap-dev": "NODE_ENV=development && npm run import && directus bootstrap && node scripts/apply.js && directus start",
+        "start:prod": "NODE_ENV=production && directus bootstrap && npm run import && directus start",
+        "export": "rm -rf snapshot && directus schema snapshot --yes ./snapshot.yaml && npm run split",
+        "import": "rm -rf merged-snapshot.yaml && npm run merge && directus schema apply --yes ./merged-snapshot.yaml",
+        "split": "node scripts/split-snapshot.js",
+        "merge": "node scripts/merge-snapshot.js",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:validation": "jest services/voucher-service/validation"
+    },
+    "keywords": [],
+    "author": "duyhq",
+    "license": "ISC",
+    "dependencies": {
+        "directus": "^11.16.0",
+        "yaml": "^2.7.1"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "coverageDirectory": "coverage",
+        "collectCoverageFrom": [
+            "services/**/*.js",
+            "!services/**/*.test.js",
+            "!services/**/*.property.test.js"
+        ],
+        "testMatch": [
+            "**/*.test.js"
+        ]
+    }
+}

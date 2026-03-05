@@ -1,0 +1,66 @@
+services:
+  postgres:
+    container_name: cms-service-postgres
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: directus
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - cms-network
+
+  minio:
+    container_name: cms-service-minio
+    image: minio/minio
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /data/directus && minio server /data --console-address ':9001'"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio:/data
+    networks:
+      - cms-network
+
+  cms-service:
+    container_name: cms-service-app
+    build: .
+    ports:
+      - "8055:8055"
+    environment:
+      KEY: d41d8cd98f00b204e9800998ecf8427e
+      SECRET: 6b86b273ff34fce19d6b804eff5a3f57
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: directus
+      DB_USER: postgres
+      DB_PASSWORD: password
+      STORAGE_LOCATIONS: minio
+      STORAGE_MINIO_DRIVER: s3
+      STORAGE_MINIO_KEY: minioadmin
+      STORAGE_MINIO_SECRET: minioadmin
+      STORAGE_MINIO_BUCKET: directus
+      STORAGE_MINIO_ENDPOINT: http://minio:9000
+      STORAGE_MINIO_REGION: us-east-1
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: admin
+      PUBLIC_URL: http://localhost:8055
+      PORT: 8055
+      NODE_ENV: development
+      TELEMETRY: false
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - cms-network
+
+networks:
+  cms-network:
+    driver: bridge

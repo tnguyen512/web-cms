@@ -1,0 +1,25 @@
+FROM node:22-alpine
+
+RUN apk add --no-cache python3 bash
+
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package.json ./
+COPY package-lock.json ./
+
+# Install all dependencies (including dev) for building
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build extensions
+RUN npm run build-extensions
+
+# Remove dev dependencies after building
+RUN npm prune --omit=dev
+
+EXPOSE 8055
+
+CMD ["npm", "run", "start:prod"]
